@@ -3,12 +3,17 @@ import express from "express";
 import { AppDataSource } from "./database/data-source";
 import { productRoutes } from "./routes/product.routes";
 import { categoryRoutes } from "./routes/category.routes";
+import { errorHandler } from "./middlewares/errorHandler";
+
 const app = express();
 
 app.use(express.json());
 
 app.use(productRoutes);
 app.use(categoryRoutes);
+
+//Request --> Middleware --> Routes --> Controller --> Erro --> Errorhandler
+app.use(errorHandler);
 
 AppDataSource.initialize()
   .then(() => {

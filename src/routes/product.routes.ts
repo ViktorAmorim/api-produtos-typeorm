@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { ProductController } from "../controllers/ProductController";
+import { validateDto } from "../middlewares/validade";
+import { CreateProductDto } from "../dtos/CreateProductDto";
+import { UpdateProductDto } from "../dtos/UpdateProductDto";
 
 const productRoutes = Router();
 
 const productController = new ProductController();
 
-productRoutes.post("/products", (req, res) =>
+productRoutes.post("/products", validateDto(CreateProductDto), (req, res) =>
   productController.create(req, res),
 );
 
@@ -35,7 +38,7 @@ productRoutes.get("/products/:id", (req, res) =>
   productController.findOne(req, res),
 );
 
-productRoutes.put("/products/:id", (req, res) =>
+productRoutes.put("/products/:id", validateDto(UpdateProductDto), (req, res) =>
   productController.update(req, res),
 );
 

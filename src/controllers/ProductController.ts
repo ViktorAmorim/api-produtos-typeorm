@@ -3,6 +3,7 @@ import { AppDataSource } from "../database/data-source";
 import { Product } from "../entities/Product";
 import { Category } from "../entities/Category";
 import { Between, ILike, MoreThan } from "typeorm";
+import { AppError } from "../errors/AppError";
 
 export class ProductController {
   async create(req: Request, res: Response): Promise<Response> {
@@ -15,7 +16,7 @@ export class ProductController {
     });
 
     if (!category) {
-      return res.status(404).json({ message: "Categoria não encontrada" });
+      throw new AppError("Category nao encontrada", 404);
     }
 
     const product = productRepository.create({
@@ -51,7 +52,7 @@ export class ProductController {
     });
 
     if (!product) {
-      return res.status(404).json({ message: "Product não encontrado" });
+      throw new AppError("Product nao encontrado", 404);
     }
 
     return res.status(200).json(product);
@@ -64,7 +65,7 @@ export class ProductController {
     const product = await productRepository.findOneBy({ id });
 
     if (!product) {
-      return res.status(404).json({ message: "Product não encontrado" });
+      throw new AppError("Product nao encontrado", 404);
     }
 
     productRepository.merge(product, req.body);
@@ -81,7 +82,7 @@ export class ProductController {
     const product = await productRepository.findOneBy({ id });
 
     if (!product) {
-      return res.status(404).json({ message: "Product não encontrado" });
+      throw new AppError("Product nao encontrado", 404);
     }
 
     await productRepository.remove(product);
@@ -99,7 +100,7 @@ export class ProductController {
     });
 
     if (!product) {
-      return res.status(404).json({ message: "Product nao encontrado" });
+      throw new AppError("Product nao encontrado", 404);
     }
 
     return res.status(200).json(product);
