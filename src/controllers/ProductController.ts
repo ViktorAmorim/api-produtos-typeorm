@@ -11,6 +11,15 @@ export class ProductController {
     const categoryRepository = AppDataSource.getRepository(Category);
 
     const { nome, descricao, preco, estoque, categoryId } = req.body;
+
+    const existProduct = await productRepository.existsBy({
+      nome: req.body.nome,
+    });
+
+    if (existProduct) {
+      throw new AppError("Product ja cadastrado", 409);
+    }
+
     const category = await categoryRepository.findOneBy({
       id: Number(categoryId),
     });
@@ -46,6 +55,10 @@ export class ProductController {
     const productRepository = AppDataSource.getRepository(Product);
 
     const id: number = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new AppError("Id do produto inváliddo", 400);
+    }
     const product = await productRepository.findOne({
       where: { id },
       relations: { category: true },
@@ -90,20 +103,87 @@ export class ProductController {
     return res.status(200).json({ message: "Product deletado com sucesso" });
   }
 
-  async searchByNome(req: Request, res: Response): Promise<Response> {
-    const productRepository = AppDataSource.getRepository(Product);
-    const nome: string = String(req.params.nome);
+  async search(req: Request, res: Response): Promise<Response> {
+    const {
+      nome,
+      categoryId,
+      minPrice,
+      maxPrice,
+      category,
+      sort,
+      order,
+      page,
+      limit,
+    } = req.query;
 
-    const product = await productRepository.find({
-      where: { nome: ILike(`%${nome}%`) },
-      relations: { category: true },
-    });
+    /* Implementar DTO para representar os dados recebidos */
 
-    if (!product) {
-      throw new AppError("Product nao encontrado", 404);
+    const repository = AppDataSource.getRepository(Product);
+
+    const query = repository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.category", "category");
+
+    if (nome) {
+      query.andWhere("product.nome ILIKE :nome", {
+        nome: `%${nome}%`,
+      });
     }
 
-    return res.status(200).json(product);
+    if (categoryId) {
+      query.andWhere("product.categoryId = :categoryId", {
+        categoryId: Number(categoryId),
+      });
+    }
+
+    if (category) {
+      query.andWhere("category.nome  ILIKE :category", {
+        category: `%${category}%`,
+      });
+    }
+
+    if (minPrice) {
+      query.andWhere("product.preco >= :minPrice", {
+        minPrice: Number(minPrice),
+      });
+    }
+
+    if (maxPrice) {
+      query.andWhere("product.preco <= :maxPrice", {
+        maxPrice: Number(maxPrice),
+      });
+    }
+
+    const allowedFields: Record<string, string> = {
+      nome: "product.nome",
+      preco: "product.preco",
+      estoque: "product.estoque",
+      category: "category.nome",
+    };
+
+    const sortFields = allowedFields[String(sort) ?? ""] ?? "product.nome";
+    const sortOrder = String(order).toUpperCase() === "DESC" ? "DESC" : "ASC";
+    query.orderBy(sortFields, sortOrder);
+
+    const currentPage = Number(page) || 1;
+    const itemsPerPage = Number(limit) || 10;
+
+    const offset = (currentPage - 1) * itemsPerPage;
+    query.skip(offset);
+
+    const [products, total] = await query.getManyAndCount();
+
+    const totalPages = Math.ceil(total / itemsPerPage);
+
+    return res.status(200).json({
+      data: products,
+      pagination: {
+        page: currentPage,
+        limit: itemsPerPage,
+        total,
+        totalPages,
+      },
+    });
   }
 
   async findAvaliable(req: Request, res: Response): Promise<Response> {
