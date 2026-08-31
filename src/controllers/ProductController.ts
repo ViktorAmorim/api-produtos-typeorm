@@ -2,15 +2,18 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../database/data-source";
 import { Product } from "../entities/Product";
 import { Category } from "../entities/Category";
-import { Between, ILike, MoreThan } from "typeorm";
+import { Between, MoreThan } from "typeorm";
 import { AppError } from "../errors/AppError";
+import { CreateProductDto } from "../dtos/CreateProductDto";
+import { SearchProductDto } from "../dtos/SearchProductDto";
 
 export class ProductController {
   async create(req: Request, res: Response): Promise<Response> {
     const productRepository = AppDataSource.getRepository(Product);
     const categoryRepository = AppDataSource.getRepository(Category);
 
-    const { nome, descricao, preco, estoque, categoryId } = req.body;
+    const { nome, descricao, preco, estoque, categoryId } =
+      req.body as CreateProductDto;
 
     const existProduct = await productRepository.existsBy({
       nome: req.body.nome,
@@ -114,7 +117,7 @@ export class ProductController {
       order,
       page,
       limit,
-    } = req.query;
+    } = req.queryDto as SearchProductDto;
 
     /* Implementar DTO para representar os dados recebidos */
 

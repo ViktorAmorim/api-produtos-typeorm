@@ -5,7 +5,10 @@ import { AppError } from "../errors/AppError";
 
 export function validateDto(dtoClass: any) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const dto: object = plainToInstance(dtoClass, req.body); // ou "dtoClass, req.body as any"
+    const dto: object = plainToInstance(
+      dtoClass,
+      req.method === "GET" ? req.query : req.body,
+    ); // ou "dtoClass, req.body as any"
 
     const errors = await validate(dto);
 
@@ -18,6 +21,11 @@ export function validateDto(dtoClass: any) {
       throw new AppError(JSON.stringify(validationErrors, null, 2), 400);
     }
 
+    if (req.method === "GET") {
+      req["queryDto"] = dto;
+      next();
+      return;
+    }
     req.body = dto;
     next();
   };

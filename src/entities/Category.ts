@@ -5,8 +5,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { Product } from "./Product";
+import { User } from "./User";
 
 @Entity("categories")
 export class Category {
@@ -30,4 +33,8 @@ export class Category {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "userId" })
+  user!: User;
 }

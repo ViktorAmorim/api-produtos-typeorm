@@ -4,9 +4,13 @@ import { Category } from "../entities/Category";
 
 export class CategoryController {
   async create(req: Request, res: Response): Promise<Response> {
+    const userId = req.user?.id as number;
     const categoryRepository = AppDataSource.getRepository(Category);
 
-    const category = categoryRepository.create(req.body);
+    const category = categoryRepository.create({
+      ...req.body,
+      user: { id: userId },
+    });
     const savedCategory = await categoryRepository.save(category);
     return res.status(201).json(savedCategory);
   }

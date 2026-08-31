@@ -3,6 +3,7 @@ import { ProductController } from "../controllers/ProductController";
 import { validateDto } from "../middlewares/validade";
 import { CreateProductDto } from "../dtos/CreateProductDto";
 import { UpdateProductDto } from "../dtos/UpdateProductDto";
+import { SearchProductDto } from "../dtos/SearchProductDto";
 import { asyncHandler } from "../middlewares/asyncHandler";
 
 const productRoutes = Router();
@@ -22,8 +23,9 @@ productRoutes.get(
 
 // Rotas específicas primeiro
 productRoutes.get(
-  "/products/search/:nome",
-  asyncHandler((req, res) => productController.searchByNome(req, res)),
+  "/products/search",
+  validateDto(SearchProductDto),
+  asyncHandler((req, res) => productController.search(req, res)),
 );
 
 productRoutes.get(
